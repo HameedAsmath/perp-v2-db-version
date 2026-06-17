@@ -11,6 +11,9 @@ import {
   serializeAdlEvent,
   serializeLiquidation,
 } from "database";
+import type { PlaceOrderRequest } from "types";
+import { placeOrderSchema } from "../validators/exchange.schema";
+import { parseBody } from "../utils/jwt";
 
 export async function resetExchange(req: Request, res: Response) {
   try {
@@ -22,8 +25,10 @@ export async function resetExchange(req: Request, res: Response) {
 }
 
 export async function placeOrder(req: Request, res: Response) {
+  const parsed = parseBody(placeOrderSchema, req.body, res);
+  if (!parsed) return;
   const { userId, symbol, side, type, quantity, price, leverage, postOnly } =
-    req.body;
+    parsed;
   try {
     const data = await loopback({
       messageType: "place_order",
