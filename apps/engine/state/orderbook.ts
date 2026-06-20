@@ -1,5 +1,6 @@
 import { openOrAddPosition } from "./positions";
 import { getUser, requiredMargin, type UserAccount } from "./users";
+import type { RestingOrder } from "types";
 import {
   persistRejectedOrder,
   persistMakerFill,
@@ -28,22 +29,12 @@ export type PlaceOrderInput = {
   postOnly?: boolean;
 };
 
-export type RestingOrder = {
-  orderId: string;
-  userId: string;
-  symbol: string;
-  side: Side;
-  price: number;
-  quantity: number;
-  leverage: number;
-  createdAt: number;
-};
-
 export type Fill = {
   price: number;
   quantity: number;
   makerOrderId: string;
   makerUserId: string;
+  makerSide: Side;
   takerUserId: string;
 };
 
@@ -367,21 +358,22 @@ export async function placeOrder(
       makerOrderId: maker.orderId,
       makerUserId: maker.userId,
       takerUserId: input.userId,
+      makerSide: maker.side,
     });
     applyMakerFill(maker, fillQty, fillPrice); // update maker book + maker user margin + maker position
     await persistMakerFill(maker.orderId, maker.quantity, fillQty); // change the orders table
-    await persistTradeFill({
-      // add it in the fills table
-      symbol: input.symbol,
-      price: fillPrice,
-      quantity: fillQty,
-      makerOrderId: maker.orderId,
-      makerUserId: maker.userId,
-      makerSide: maker.side,
-      takerOrderId: orderId, // incoming placed order
-      takerUserId: input.userId,
-      takerSide: input.side,
-    });
+    // await persistTradeFill({
+    //   // add it in the fills table
+    //   symbol: input.symbol,
+    //   price: fillPrice,
+    //   quantity: fillQty,
+    //   makerOrderId: maker.orderId,
+    //   makerUserId: maker.userId,
+    //   makerSide: maker.side,
+    //   takerOrderId: orderId, // incoming placed order
+    //   takerUserId: input.userId,
+    //   takerSide: input.side,
+    // });
     applyTakerFill(input, fillQty, fillPrice, fillMargin);
     marginUsed += fillMargin;
     remaining -= fillQty;
@@ -414,6 +406,19 @@ export async function placeOrder(
         );
 
   await persistPlacedOrder(orderId, input, response);
+  for (const fill of response.fills) {
+    await persistTradeFill({
+      symbol: input.symbol,
+      price: fill.price,
+      quantity: fill.quantity,
+      makerOrderId: fill.makerOrderId,
+      makerUserId: fill.makerUserId,
+      makerSide: fill.makerSide,
+      takerOrderId: orderId,
+      takerUserId: input.userId,
+      takerSide: input.side,
+    });
+  }
   return response;
 }
 

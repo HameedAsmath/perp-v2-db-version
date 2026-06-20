@@ -62,4 +62,9 @@ export type ToEngine =
       runLiquidation: string;
     }
   | { messageType: "get_insurance_fund"; symbol: string }
-  | { messageType: "get_adl_events" };
+  | { messageType: "get_adl_events" }
+  | {
+      messageType: "seed_orderbook";
+      userId: string;
+      symbol: string;
+    };

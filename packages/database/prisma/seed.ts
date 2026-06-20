@@ -8,12 +8,12 @@ async function main() {
       slug: "BTC-PERP",
       baseCurrency: "BTC",
       quoteCurrency: "USDT",
-      tickSize: 1n,
-      minOrderSize: 1n,
-      maxOrderSize: 1_000_000n,
+      tickSize: 1,
+      minOrderSize: 1,
+      maxOrderSize: 1_000_000,
       maxLeverage: 100,
-      makerFeeRate: 0n,
-      takerFeeRate: 0n,
+      makerFeeRate: 0,
+      takerFeeRate: 0,
       maintenanceMarginRate: 50, // 0.5%
       initialMarginRate: 100, // 1%
     },

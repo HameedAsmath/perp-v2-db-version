@@ -4,11 +4,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --hot run ./index.ts"
+    "dev": "bun --hot run ./index.ts",
+    "seed:orderbook": "bun run scripts/seed-orderbook.ts"
   },
   "devDependencies": {
     "@types/bun": "latest",
-    "@types/jsonwebtoken": "^9.0.10"
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/ws": "^8.18.1"
   },
   "peerDependencies": {
     "typescript": "^5"
@@ -23,6 +25,7 @@
     "jsonwebtoken": "^9.0.3",
     "redis": "^6.0.0",
     "types": "workspace:*",
+    "ws": "^8.21.0",
     "zod": "^4.4.3"
   }
 }

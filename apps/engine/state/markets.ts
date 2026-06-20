@@ -18,20 +18,24 @@ export function resetMarkets() {
 export async function getMarket(symbol: string): Promise<Market> {
   const res = marketCache.get(symbol);
   if (res) return res;
-
-  const market = await getMarketBySlug(symbol);
-  if (!market || !market.isActive) {
-    throw new Error(`Market not found or inactive: ${symbol}`);
+  try {
+    const market = await getMarketBySlug(symbol);
+    console.log("[getMarket] DB result:", market?.slug ?? "null");
+    if (!market || !market.isActive) {
+      throw new Error(`Market not found or inactive: ${symbol}`);
+    }
+    const marketData = {
+      id: market.id,
+      slug: market.slug,
+      maxLeverage: market.maxLeverage,
+      minOrderSize: Number(market.minOrderSize),
+      maxOrderSize: Number(market.maxOrderSize),
+      isActive: market.isActive,
+    };
+    marketCache.set(symbol, marketData);
+    return marketData;
+  } catch (err) {
+    console.error("[getMarket] DB error:", err);
+    throw err;
   }
-
-  const marketData = {
-    id: market.id,
-    slug: market.slug,
-    maxLeverage: market.maxLeverage,
-    minOrderSize: Number(market.minOrderSize),
-    maxOrderSize: Number(market.maxOrderSize),
-    isActive: market.isActive,
-  };
-  marketCache.set(symbol, marketData);
-  return marketData;
 }

@@ -49,12 +49,12 @@ function toStreamFields( // to convert everything to string for redis
   return fields;
 }
 
-export async function loopback(message: ToEngine) {
+export async function loopback(message: ToEngine, timeoutMs = 10_000) {
   const correlationId = crypto.randomUUID();
   return new Promise((resolve, reject) => {
     const timer = setTimeout(() => {
       failPending(correlationId, new Error("timeout"));
-    }, 10000);
+    }, timeoutMs);
     createPending(correlationId, {
       resolve: (result) => {
         if (!result.ok) {

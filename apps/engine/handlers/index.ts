@@ -10,6 +10,8 @@ import { resetFills } from "../db/fills";
 import { resetAdlEvents } from "../db/adl";
 import { resetLiquidations } from "../db/liquidations";
 import { resetInsurance } from "../db/insurance";
+import { seedOrderbook } from "../seed/orderbook";
+import { publishOrderBook } from "../redis/orderbook-publisher";
 
 export async function dispatch(
   message: ToEngine & { correlationId: string },
@@ -33,18 +35,20 @@ export async function dispatch(
         data: { ok: true, userId: message.userId },
       };
     case "place_order":
+      const result = await placeOrder({
+        userId: message.userId,
+        symbol: message.symbol,
+        side: message.side,
+        type: message.type,
+        quantity: Number(message.quantity),
+        price: Number(message.price),
+        leverage: Number(message.leverage),
+        postOnly: message.postOnly === "true",
+      });
+      await publishOrderBook(message.symbol); // publish the order book to the redis stream to broadcast
       return {
         ok: true,
-        data: await placeOrder({
-          userId: message.userId,
-          symbol: message.symbol,
-          side: message.side,
-          type: message.type,
-          quantity: Number(message.quantity),
-          price: Number(message.price),
-          leverage: Number(message.leverage),
-          postOnly: message.postOnly === "true",
-        }),
+        data: result,
       };
     case "get_balance":
       return {
@@ -88,6 +92,11 @@ export async function dispatch(
       return {
         ok: true,
         data: getPositionsView(message.userId),
+      };
+    case "seed_orderbook":
+      return {
+        ok: true,
+        data: await seedOrderbook(message.userId, message.symbol),
       };
     default:
       return {

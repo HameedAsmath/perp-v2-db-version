@@ -105,6 +105,12 @@ export async function signin(req: Request, res: Response) {
     }
 
     const token = signToken(user.id);
+    // const INITIAL_BALANCE = 10000;
+    // await loopback({
+    //   messageType: "create_user",
+    //   userId: user.id,
+    //   initialBalance: String(INITIAL_BALANCE),
+    // });
 
     res.json({
       token,

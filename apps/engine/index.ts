@@ -1,9 +1,15 @@
 import { reply } from "./redis/publisher";
 import { dispatch } from "./handlers";
 import { reader, publisher } from "./redis/client";
-import { startSnapshotScheduler } from "./snapshot";
+import {
+  loadSnapshot,
+  restoreSnapshot,
+  startSnapshotScheduler,
+} from "./snapshot";
 
 startSnapshotScheduler();
+const snapshot = await loadSnapshot();
+if (snapshot) restoreSnapshot(snapshot);
 
 const GROUP = "engine";
 const CONSUMER = "engine-1";

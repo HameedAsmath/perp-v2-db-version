@@ -1,6 +1,6 @@
 import type { UserAccount } from "../state/users";
 import type { Position } from "../state/positions";
-import type { RestingOrder } from "../state/orderbook";
+import type { RestingOrder } from "types";
 
 export const SNAPSHOT_VERSION = 1;
 

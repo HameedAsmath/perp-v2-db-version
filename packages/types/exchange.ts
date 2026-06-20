@@ -24,3 +24,46 @@ export type PlaceOrderResponse = {
   cancelledQuantity: number;
   margin: { locked: number; used: number; released: number };
 };
+
+export type RestingOrder = {
+  orderId: string;
+  userId: string;
+  symbol: string;
+  side: OrderSide;
+  price: number;
+  quantity: number;
+  leverage: number;
+  createdAt: number;
+};
+
+/** Raw order book from the engine / API — already sorted. */
+export type OrderBookView = {
+  symbol: string;
+  bids: RestingOrder[];
+  asks: RestingOrder[];
+};
+
+/** After aggregation — UI only. */
+export type OrderBookPriceLevel = {
+  price: number;
+  size: number;
+  /** Cumulative size from best price outward on this side. */
+  total: number;
+};
+
+export type OrderBookDisplayMode = "both" | "asks" | "bids";
+
+export type KlineCandle = {
+  time: number; // unix seconds
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export type KlinesResponse = {
+  symbol: string;
+  interval: string; // e.g. "1h"
+  candles: KlineCandle[];
+};

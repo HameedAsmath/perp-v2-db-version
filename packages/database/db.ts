@@ -15,3 +15,4 @@ export * from "./utils/markets";
 export * from "./utils/insurance";
 export * from "./utils/liquidations";
 export * from "./utils/adl";
+export * from "./utils/klines";

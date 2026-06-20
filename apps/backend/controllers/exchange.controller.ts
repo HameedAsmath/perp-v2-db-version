@@ -10,6 +10,7 @@ import {
   serializeInsuranceFund,
   serializeAdlEvent,
   serializeLiquidation,
+  getKlinesBySymbol,
 } from "database";
 import type { PlaceOrderRequest } from "types";
 import { placeOrderSchema } from "../validators/exchange.schema";
@@ -42,8 +43,10 @@ export async function placeOrder(req: Request, res: Response) {
       postOnly: String(postOnly ?? false),
     });
     res.status(200).json(data);
-  } catch {
-    res.status(500).json({ error: "Failed to place order" });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Failed to place order",
+    });
   }
 }
 
@@ -55,8 +58,11 @@ export async function getUserBalance(req: Request, res: Response) {
       userId,
     });
     res.status(200).json(data);
-  } catch {
-    res.status(500).json({ error: "Failed to get user balance" });
+  } catch (error) {
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Failed to get user balance",
+    });
   }
 }
 
@@ -68,8 +74,11 @@ export async function getUserPositions(req: Request, res: Response) {
       userId,
     });
     res.status(200).json(data);
-  } catch {
-    res.status(500).json({ error: "Failed to get user positions" });
+  } catch (error) {
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Failed to get user positions",
+    });
   }
 }
 
@@ -121,6 +130,26 @@ export async function getOrderBook(req: Request, res: Response) {
   } catch (error) {
     res.status(500).json({
       error: error instanceof Error ? error.message : "Failed to get orderbook",
+    });
+  }
+}
+
+export async function seedOrderbook(req: Request, res: Response) {
+  const userId = (req.userId ?? req.body?.userId) as string;
+  const symbol = (req.body?.symbol as string) ?? "BTC-PERP";
+  if (!userId) {
+    return res.status(400).json({ error: "userId required" });
+  }
+  try {
+    const data = await loopback(
+      { messageType: "seed_orderbook", userId, symbol },
+      120_000,
+    );
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({
+      error:
+        error instanceof Error ? error.message : "Failed to seed orderbook",
     });
   }
 }
@@ -182,4 +211,16 @@ export async function getLiquidations(req: Request, res: Response) {
     orderBy: { createdAt: "desc" },
   });
   res.json({ liquidations: rows.map(serializeLiquidation) });
+}
+
+export async function getKlines(req: Request, res: Response) {
+  const symbol = req.params.symbol as string;
+  try {
+    const candles = await getKlinesBySymbol(symbol);
+    res.json({ symbol, interval: "1h", candles });
+  } catch (error) {
+    res.status(500).json({
+      error: error instanceof Error ? error.message : "Failed to get klines",
+    });
+  }
 }

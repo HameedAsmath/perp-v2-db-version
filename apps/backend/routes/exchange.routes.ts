@@ -13,6 +13,8 @@ import {
   getOrderById,
   getMyFills,
   getMarkets,
+  seedOrderbook,
+  getKlines,
 } from "../controllers/exchange.controller";
 import { authMiddleware } from "../middleware/auth";
 
@@ -20,6 +22,11 @@ const exchangeRouter = Router();
 
 exchangeRouter.get("/orderbook/:symbol", getOrderBook); // orderbook is public
 exchangeRouter.get("/markets", getMarkets); // markets is public
+exchangeRouter.get("/klines/:symbol", getKlines);
+
+if (process.env.NODE_ENV !== "production") {
+  exchangeRouter.post("/dev/seed-orderbook", seedOrderbook);
+}
 
 exchangeRouter.post("/reset", authMiddleware, resetExchange);
 exchangeRouter.post("/orders", authMiddleware, placeOrder);
