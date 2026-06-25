@@ -28,8 +28,17 @@ export async function resetExchange(req: Request, res: Response) {
 export async function placeOrder(req: Request, res: Response) {
   const parsed = parseBody(placeOrderSchema, req.body, res);
   if (!parsed) return;
-  const { userId, symbol, side, type, quantity, price, leverage, postOnly } =
-    parsed;
+  const {
+    userId,
+    symbol,
+    side,
+    type,
+    quantity,
+    price,
+    leverage,
+    postOnly,
+    slippage,
+  } = parsed;
   try {
     const data = await loopback({
       messageType: "place_order",
@@ -41,6 +50,7 @@ export async function placeOrder(req: Request, res: Response) {
       price: String(price ?? 0),
       leverage: String(leverage ?? 1),
       postOnly: String(postOnly ?? false),
+      slippage: String(slippage ?? 0),
     });
     res.status(200).json(data);
   } catch (error) {

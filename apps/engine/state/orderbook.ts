@@ -2,12 +2,18 @@ import { openOrAddPosition } from "./positions";
 import { getUser, requiredMargin, type UserAccount } from "./users";
 import type { RestingOrder } from "types";
 import {
+  validatePriceBand,
+  validateQuantityStep,
+  validateTickSize,
+} from "types";
+import {
   persistRejectedOrder,
   persistMakerFill,
   persistPlacedOrder,
 } from "../db/orders";
 import { persistTradeFill } from "../db/fills";
 import { getMarket } from "./markets";
+import { getMarkPrice } from "./markPrices";
 
 export type Side = "long" | "short";
 export type OrderType = "limit" | "market";
@@ -27,6 +33,7 @@ export type PlaceOrderInput = {
   price: number;
   leverage?: number;
   postOnly?: boolean;
+  slippage?: number;
 };
 
 export type Fill = {
@@ -282,7 +289,39 @@ export async function placeOrder(
   const leverage = input.leverage ?? 1;
   const fills: Fill[] = [];
 
-  const initialLock = requiredMargin(input.price, input.quantity, leverage);
+  const qtyErr = validateQuantityStep(
+    input.quantity,
+    market.minOrderSize,
+    market.minOrderSize,
+    market.maxOrderSize,
+  );
+  if (qtyErr) {
+    await persistRejectedOrder(orderId, input, qtyErr);
+    return rejected(orderId, input.quantity, qtyErr);
+  }
+
+  if (input.type === "limit" && input.price != null) {
+    const tickErr = validateTickSize(input.price, market.tickSize);
+    if (tickErr) {
+      await persistRejectedOrder(orderId, input, tickErr);
+      return rejected(orderId, input.quantity, tickErr);
+    }
+
+    const referencePrice = getMarkPrice(input.symbol);
+    if (referencePrice > 0) {
+      const bandErr = validatePriceBand(input.price, referencePrice);
+      if (bandErr) {
+        await persistRejectedOrder(orderId, input, bandErr);
+        return rejected(orderId, input.quantity, bandErr);
+      }
+    }
+  }
+
+  const initialLock = requiredMargin(
+    lockPriceForOrder(input),
+    input.quantity,
+    leverage,
+  );
 
   // Step 1: post-only check (before any lock) user wants to be a maker
   if (input.postOnly && input.type === "limit" && input.price != null) {
@@ -304,14 +343,6 @@ export async function placeOrder(
   if (user.availableBalance < initialLock) {
     await persistRejectedOrder(orderId, input, "insufficient margin");
     return rejected(orderId, input.quantity, "insufficient margin");
-  }
-
-  if (
-    input.quantity < market.minOrderSize ||
-    input.quantity > market.maxOrderSize
-  ) {
-    await persistRejectedOrder(orderId, input, "invalid order size");
-    return rejected(orderId, input.quantity, "invalid order size");
   }
 
   if (leverage > market.maxLeverage) {
@@ -341,6 +372,9 @@ export async function placeOrder(
     const fillPrice = maker.price;
     const fillMargin = requiredMargin(fillPrice, fillQty, leverage);
     // Market: check if this fill (or full remaining) is affordable because it can go above locked price
+    if (input.type === "market" && exceedsSlippage(input, maker.price)) {
+      break;
+    }
     if (
       input.type === "market" &&
       wouldExceedLockedMargin(makers, input.quantity, leverage, initialLock)
@@ -434,4 +468,24 @@ export function importOrderbook(
   for (const [symbol, book] of Object.entries(data)) {
     orderbook.set(symbol, { bids: [...book.bids], asks: [...book.asks] });
   }
+}
+
+export function lockPriceForOrder(input: PlaceOrderInput): number {
+  if (input.type !== "market" || !input.slippage) return input.price;
+  if (input.side === "long") {
+    return input.price * (1 + input.slippage / 10_000);
+  }
+  return input.price;
+}
+
+export function exceedsSlippage(
+  input: PlaceOrderInput,
+  makerPrice: number,
+): boolean {
+  if (input.type !== "market" || !input.slippage) return false;
+  const bps = input.slippage;
+  if (input.side === "long") {
+    return makerPrice > input.price * (1 + bps / 10_000);
+  }
+  return makerPrice < input.price * (1 - bps / 10_000);
 }

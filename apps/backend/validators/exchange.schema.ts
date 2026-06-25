@@ -9,6 +9,7 @@ export const placeOrderSchema = z.object({
   price: z.coerce.number().nonnegative(),
   leverage: z.coerce.number().int().positive().optional(),
   postOnly: z.boolean().optional(),
+  slippage: z.coerce.number().min(0).max(100).int().positive().optional(),
 });
 
 export type PlaceOrderInput = z.infer<typeof placeOrderSchema>;

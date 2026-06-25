@@ -1,17 +1,6 @@
 import { getMarkPrice } from "./markPrices";
+import type { Position } from "types";
 import type { Side } from "./orderbook";
-
-export type Position = {
-  symbol: string;
-  side: Side;
-  quantity: number;
-  averageEntryPrice: number;
-  margin: number;
-  leverage: number;
-  unrealizedPnl?: number;
-  liquidationPrice?: number;
-};
-
 const positions = new Map<string, Map<string, Position>>(); // userId -> symbol -> position
 
 export function resetPositions() {

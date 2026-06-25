@@ -1,5 +1,5 @@
 import { prisma, getMarketId } from "database";
-import type { Position } from "../state/positions";
+import type { Position } from "types";
 
 export async function persistLiquidation(input: {
   userId: string;

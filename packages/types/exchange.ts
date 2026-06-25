@@ -2,6 +2,24 @@
 export type OrderSide = "long" | "short";
 export type OrderType = "limit" | "market";
 
+export type MarketInfo = {
+  id: string;
+  slug: string;
+  baseCurrency: string;
+  quoteCurrency: string;
+  imageUrl: string | null;
+  tickSize: number;
+  minOrderSize: number;
+  maxOrderSize: number;
+  maxLeverage: number;
+  makerFeeRate: number;
+  takerFeeRate: number;
+  maintenanceMarginRate: number;
+  initialMarginRate: number;
+  isActive: boolean;
+  createdAt: string;
+};
+
 // What the frontend POSTs to /api/orders
 export type PlaceOrderRequest = {
   userId: string;
@@ -12,6 +30,7 @@ export type PlaceOrderRequest = {
   price: number;
   leverage?: number;
   postOnly?: boolean;
+  slippage?: number;
 };
 
 // What the API returns (from engine OrderResponse)
@@ -66,4 +85,15 @@ export type KlinesResponse = {
   symbol: string;
   interval: string; // e.g. "1h"
   candles: KlineCandle[];
+};
+
+export type Position = {
+  symbol: string;
+  side: OrderSide;
+  quantity: number;
+  averageEntryPrice: number;
+  margin: number;
+  leverage: number;
+  unrealizedPnl?: number;
+  liquidationPrice?: number;
 };

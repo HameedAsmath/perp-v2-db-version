@@ -34,6 +34,7 @@ export type ToEngine =
       price: string;
       leverage: string;
       postOnly: string;
+      slippage: string;
     }
   | {
       messageType: "get_orderbook";

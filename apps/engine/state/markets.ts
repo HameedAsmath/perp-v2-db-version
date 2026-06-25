@@ -3,6 +3,7 @@ import { getMarketBySlug } from "database";
 export type Market = {
   id: string;
   slug: string;
+  tickSize: number;
   maxLeverage: number;
   minOrderSize: number;
   maxOrderSize: number;
@@ -27,6 +28,7 @@ export async function getMarket(symbol: string): Promise<Market> {
     const marketData = {
       id: market.id,
       slug: market.slug,
+      tickSize: Number(market.tickSize),
       maxLeverage: market.maxLeverage,
       minOrderSize: Number(market.minOrderSize),
       maxOrderSize: Number(market.maxOrderSize),

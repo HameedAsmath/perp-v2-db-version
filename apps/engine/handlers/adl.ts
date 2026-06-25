@@ -1,6 +1,6 @@
 import { getAllPositionsForSymbol, removePosition } from "../state/positions";
 import { getUser } from "../state/users";
-import type { Position } from "../state/positions";
+import type { Position } from "types";
 import { persistAdlEvent } from "../db/adl";
 
 function unrealizedPnl(position: Position, mark: number): number {

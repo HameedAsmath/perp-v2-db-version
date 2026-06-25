@@ -44,6 +44,7 @@ export async function dispatch(
         price: Number(message.price),
         leverage: Number(message.leverage),
         postOnly: message.postOnly === "true",
+        slippage: Number(message.slippage),
       });
       await publishOrderBook(message.symbol); // publish the order book to the redis stream to broadcast
       return {

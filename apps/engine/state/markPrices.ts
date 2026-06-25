@@ -1,3 +1,5 @@
+import { getDefaultMarkPrice } from "types";
+
 const markPrices = new Map<string, number>();
 
 export function resetMarkPrices() {
@@ -9,5 +11,7 @@ export function setMarkPrice(symbol: string, markPrice: number) {
 }
 
 export function getMarkPrice(symbol: string) {
-  return markPrices.get(symbol) ?? 0;
+  const stored = markPrices.get(symbol);
+  if (stored != null && stored > 0) return stored;
+  return getDefaultMarkPrice(symbol);
 }
